@@ -1,0 +1,44 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';  // Import OrbitControls
+import * as OBJECTS3D from '/src/objects3d.js';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.getElementById('threejs-container').appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+
+const table = OBJECTS3D.createTable();
+scene.add(table);
+
+camera.position.set(0,14,20);
+camera.lookAt(0,0,0);
+
+const ambientLight = new THREE.AmbientLight(0x404040, 5);
+scene.add(ambientLight);
+
+const sunlight = new THREE.DirectionalLight(0xffffff, 5);
+sunlight.position.set(0,50,0);
+sunlight.target.position.set(0,0,0);
+scene.add(sunlight);
+
+const card = OBJECTS3D.createCard();
+card.position.y = 2;
+scene.add(card);
+
+function animate() {
+    requestAnimationFrame(animate);
+    
+    // Rotate the cube for a simple animation
+  
+    // Render the scene
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  
+  // Start the animation loop
+  animate();
