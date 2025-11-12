@@ -18,7 +18,7 @@ scene.add(table);
 camera.position.set(0,14,20);
 camera.lookAt(0,0,0);
 
-const ambientLight = new THREE.AmbientLight(0x404040, 5);
+const ambientLight = new THREE.AmbientLight(0x404040, 10);
 scene.add(ambientLight);
 
 const sunlight = new THREE.DirectionalLight(0xffffff, 5);
@@ -27,7 +27,7 @@ sunlight.target.position.set(0,0,0);
 scene.add(sunlight);
 
 const card = OBJECTS3D.createCard();
-card.position.y = 2;
+card.position.y = 6;
 scene.add(card);
 
 function animate() {
@@ -38,6 +38,7 @@ function animate() {
     // Render the scene
     controls.update();
     renderer.render(scene, camera);
+    // card.rotation.z += 0.02;
   }
   
   // Start the animation loop

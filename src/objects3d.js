@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as TEXTURES from '/src/textures.js';
 
 export function createTable() {
     const textureLoader = new THREE.TextureLoader();
@@ -15,24 +16,6 @@ export function createTable() {
     const table = new THREE.Mesh(geometry, material);
     table.rotation.x = -Math.PI / 2;
     return table;
-}
-
-function cardBackTexture() {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = 180;
-    canvas.height = 360;
-    const edgeIn = 5;
-    context.fillStyle = '#FFFFFF';
-    context.fillRect(0,0,canvas.width, canvas.height);
-    context.fillStyle = '#0000FF';
-    context.fillRect(edgeIn, edgeIn, canvas.width - edgeIn, canvas.height - edgeIn);
-    context.fillStyle = '#FF0000';
-    context.fillRect(100, 100, 200, 200);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.repeat.set(1,1);
-    texture.needsUpdate = true;
-    return texture;
 }
 
 export function createCard() {
@@ -62,22 +45,41 @@ export function createCard() {
     };
     
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    // geometry.computeBoundingBox();
-    // const max = geometry.boundingBox.max;
-    // const min = geometry.boundingBox.min;
-    // const uvs = geometry.attributes.uv.array;
-    // for (let i = 0; i < uvs.length; i += 2) {
-    //     uvs[i] = (uvs[i] - min.x) / (max.x - min.x);
-    //     uvs[i + 1] = (uvs[i + 1] - min.y) / (max.y - min.y);
-    //   }
-    // geometry.attributes.uv.needsUpdate = true;
+
+    geometry.computeBoundingBox();
+
+    const bbox = geometry.boundingBox;
+    const pos = geometry.attributes.position;
+    const uvs = new Float32Array(pos.count * 2);
+
+    for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+
+        const u = (x - bbox.min.x) / (bbox.max.x - bbox.min.x);
+        const v = (y - bbox.min.y) / (bbox.max.y - bbox.min.y);
+
+        uvs[i * 2] = u;
+        uvs[i * 2 + 1] = v;
+    }
+
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+
     const sideMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    const frontMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-    // const backMaterial = new THREE.MeshBasicMaterial({ map: cardBackTexture() });
-    const backMaterial = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
-    const card = new THREE.Mesh(geometry, [frontMaterial, sideMaterial, backMaterial]);
-    card.geometry.faces[0].materialIndex = 1;
-    card.geometry.faces[1].materialIndex = 2;
-    card.rotation.x = -Math.PI/2;
+    const backMaterial = new THREE.MeshStandardMaterial({ map: TEXTURES.cards['9-8'] });
+    // backTexture.wrapS = backTexture.wrapT = THREE.ClampToEdgeWrapping;
+    // backTexture.repeat.set(1,1);
+    const frontMaterial = new THREE.MeshStandardMaterial({ map: TEXTURES.cards[''] });
+    // const backMaterial = new THREE.MeshBasicMaterial( { color: 0x00f0ff } );
+    const faceCount = geometry.groups[0].count/2;
+    const edgeCount = geometry.groups[1].count;
+    geometry.clearGroups();
+    geometry.addGroup(0, faceCount, 0);
+    geometry.addGroup(faceCount, faceCount, 1);
+    geometry.addGroup(2*faceCount, edgeCount, 2);
+    const card = new THREE.Mesh(geometry, [frontMaterial, backMaterial, sideMaterial]);
+    // console.log(geometry.attributes.uv.array.slice(0, 20));
+
+    // card.rotation.x = -Math.PI/2;
     return card;
 }
