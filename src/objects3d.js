@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import * as TEXTURES from '/src/textures.js';
-
+import woodPng from './assets/wood.jpg';
 export function createTable() {
     const textureLoader = new THREE.TextureLoader();
-    const woodTexture = textureLoader.load('/textures/wood.jpg');
+    const woodTexture = textureLoader.load(woodPng);
 
     const geometry = new THREE.CircleGeometry(20, 128);
     // const material = new THREE.MeshLambertMaterial({ color: 0xff0000, side: THREE.DoubleSide });
