@@ -153,9 +153,9 @@ function applyUVs(geometry, heightFactor, heightOffset) {
     geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 }
 
-export function createFoldableCard() {
+export function createFoldableCard(cardType) {
     const sideMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    const backMaterial = new THREE.MeshStandardMaterial({ map: TEXTURES.cards['2-1'] });
+    const backMaterial = new THREE.MeshStandardMaterial({ map: TEXTURES.cards[cardType] });
     const frontMaterial = new THREE.MeshStandardMaterial({ map: TEXTURES.cards[''] });
 
     const bottomShape = createFcardBottomShape();
@@ -188,14 +188,16 @@ export function createFoldableCard() {
     cardLast.add(topCard);
     topCard.position.set(0,fCardradius,0);
     subShapes.push(topCard);
-
+    cardBottom.rotation.set(Math.PI/2, 0, 0);
+    cardBottom.position.set(0, 0.03, -fCardHeight);
+    const cardGroup = new THREE.Group();
+    cardGroup.add(cardBottom);
     return {
-        bottom: cardBottom,
+        mesh: cardGroup,
         ss: subShapes,
-        rval: 0,
-        updateR() {
+        setR(rval) {
             for(let i = 0; i < this.ss.length; i++) {
-                this.ss[i].rotation.x = this.rval;
+                this.ss[i].rotation.x = rval;
             }
         }
     };

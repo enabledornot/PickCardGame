@@ -56,9 +56,11 @@ function drawSide(canvas, context, value, edgeIn) {
 export const cards = {};
 cards[''] = generateCardTexture('');
 cards['-'] = generateCardTexture('-');
+export const cardIDs = [];
 for(let i = 0; i < 10; i++) {
     for(let j = 0; j < i; j++) {
         const key = `${i}-${j}`;
         cards[key] = generateCardTexture(key);
+        cardIDs.push(key);
     }
 }
