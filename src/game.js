@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';  // Import OrbitControls
-import * as OBJECTS3D from '/src/objects3d.js';
-import * as GAMEOBJECTS from '/src/gameobjects.js';
+import * as OBJECTS3D from '../src/objects3d.js';
+import * as GAMEOBJECTS from '../src/gameObjects.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
