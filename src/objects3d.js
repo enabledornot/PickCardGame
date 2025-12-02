@@ -83,3 +83,120 @@ export function createCard() {
     // card.rotation.x = -Math.PI/2;
     return card;
 }
+const fCardWidth = 3/2;
+const fCardHeight = 6/2;
+const fCardradius = 0.2;
+function createFcardBottomShape() {
+    const shape = new THREE.Shape();
+    shape.moveTo(fCardradius-fCardWidth, 0);
+    shape.quadraticCurveTo(-fCardWidth, 0, -fCardWidth, fCardradius);
+    shape.lineTo(fCardWidth, fCardradius);
+    shape.quadraticCurveTo(fCardWidth, 0, fCardWidth-fCardradius,0);
+    shape.closePath();
+    return shape;
+}
+function createFcardMiddleShape() {
+    const shape = new THREE.Shape();
+    shape.moveTo(-fCardWidth, 0);
+    shape.lineTo(-fCardWidth, fCardradius);
+    shape.lineTo(fCardWidth, fCardradius);
+    shape.lineTo(fCardWidth, 0);
+    shape.closePath();
+    return shape;
+}
+function createFcardTopShape() {
+    const shape = new THREE.Shape();
+    shape.moveTo(-fCardWidth, 0);
+    shape.quadraticCurveTo(-fCardWidth, fCardradius, fCardradius-fCardWidth, fCardradius);
+    shape.lineTo(fCardWidth-fCardradius, fCardradius);
+    shape.quadraticCurveTo(fCardWidth, fCardradius, fCardWidth, 0);
+    shape.closePath();
+    return shape;
+}
+function extrudeShape(shape) {
+    const extrudeSettings = {
+        depth: 0.02,
+        bevelEnabled: false,
+        bevelThinkness: 0.01,
+        bevelSize: 0.01,
+        bevelOffset: 0,
+        bevelSegments: 2
+    };
+
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+    geometry.computeBoundingBox();
+
+    const faceCount = geometry.groups[0].count/2;
+    const edgeCount = geometry.groups[1].count;
+    geometry.clearGroups();
+    geometry.addGroup(0, faceCount, 0);
+    geometry.addGroup(faceCount, faceCount, 1);
+    geometry.addGroup(2*faceCount, edgeCount, 2);
+    return geometry;
+}
+
+function applyUVs(geometry, heightFactor, heightOffset) {
+    const bbox = geometry.boundingBox;
+    const pos = geometry.attributes.position;
+    const uvs = new Float32Array(pos.count * 2);
+    for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+
+        const u = (x - bbox.min.x) / (bbox.max.x - bbox.min.x);
+        const v = heightOffset + (((y - bbox.min.y) * heightFactor) / (bbox.max.y - bbox.min.y));
+
+        uvs[i * 2] = u;
+        uvs[i * 2 + 1] = v;
+    }
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+}
+
+export function createFoldableCard() {
+    const sideMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const backMaterial = new THREE.MeshStandardMaterial({ map: TEXTURES.cards['2-1'] });
+    const frontMaterial = new THREE.MeshStandardMaterial({ map: TEXTURES.cards[''] });
+
+    const bottomShape = createFcardBottomShape();
+    const bottomGeometry = extrudeShape(bottomShape);
+
+    const middleShape = createFcardMiddleShape();
+
+    const topShape = createFcardTopShape();
+
+    const uvFactor = fCardradius /fCardHeight /2;
+    applyUVs(bottomGeometry, uvFactor, 0);
+    const cardBottom = new THREE.Mesh(bottomGeometry, [frontMaterial, backMaterial, sideMaterial]);
+    let cardLast = cardBottom;
+    const middleSegCnt = ((fCardHeight*2) / fCardradius) - 2;
+    const subShapes = [];
+    const group = new THREE.Group();
+    for(let i = 1; i <= middleSegCnt; i++) {
+        const myGeometry = extrudeShape(middleShape);
+        applyUVs(myGeometry, uvFactor, uvFactor*i);
+        const cardNext = new THREE.Mesh(myGeometry, [frontMaterial, backMaterial, sideMaterial]);
+        cardLast.add(cardNext);
+        cardNext.position.set(0,fCardradius,0);
+        cardLast = cardNext;
+        subShapes.push(cardNext);
+    }
+
+    const topGeometry = extrudeShape(topShape);
+    applyUVs(topGeometry, uvFactor, uvFactor*(middleSegCnt+1));
+    const topCard = new THREE.Mesh(topGeometry, [frontMaterial, backMaterial, sideMaterial]);
+    cardLast.add(topCard);
+    topCard.position.set(0,fCardradius,0);
+    subShapes.push(topCard);
+
+    return {
+        bottom: cardBottom,
+        ss: subShapes,
+        rval: 0,
+        updateR() {
+            for(let i = 0; i < this.ss.length; i++) {
+                this.ss[i].rotation.x = this.rval;
+            }
+        }
+    };
+}

@@ -26,9 +26,10 @@ sunlight.position.set(0,50,0);
 sunlight.target.position.set(0,0,0);
 scene.add(sunlight);
 
-const card = OBJECTS3D.createCard();
-card.position.y = 6;
-scene.add(card);
+const card = OBJECTS3D.createFoldableCard();
+// card.rg.rotation.y = 0.05;
+card.bottom.position.y = 6;
+scene.add(card.bottom);
 
 function animate() {
     requestAnimationFrame(animate);
