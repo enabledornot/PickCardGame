@@ -1,17 +1,23 @@
+import { stack } from 'three/tsl';
 import * as OBJECTS3D from '/src/objects3d.js';
 import * as TEXTURES from '/src/textures.js';
 import * as THREE from 'three';
-
-const execBuffer = [];
+export const execBuffer = [];
 let currentExec;
 let currentExecCnt = 0;
-
+let callBack;
+export function setCallBack(cb) {
+    callBack = cb;
+}
 export function gameLoop(scene, timeDelta) {
     // console.log(execBuffer);
     // return;
     if (currentExec === undefined) {
         currentExec = execBuffer.shift();
         if (currentExec === undefined) {
+            if(callBack !== undefined) {
+                // callBack();
+            }
             return;
         }
         currentExecCnt = 0;
@@ -19,8 +25,8 @@ export function gameLoop(scene, timeDelta) {
     else {
         currentExecCnt += timeDelta;
     }
-    console.log(currentExec);
-    console.log(currentExecCnt);
+    // console.log(currentExec);
+    // console.log(currentExecCnt);
     if(currentExec.time != 0) {
         let execFactor;
         if (currentExecCnt > currentExec.time) {
@@ -30,7 +36,7 @@ export function gameLoop(scene, timeDelta) {
             execFactor = currentExecCnt / currentExec.time;
         }
         currentExec.apply(scene, execFactor);
-        console.log(execFactor);
+        // console.log(execFactor);
         if(execFactor === 1) {
             currentExec = undefined;
         }
@@ -62,20 +68,9 @@ export function createDeck() {
             let i = 0;
             let j = 0;
             let k = halfDeck;
-            while(i < this.c.length) {
-                if(i % 2 === 0) {
-                    newDeck.push(this.c[j]);
-                    j++;
-                }
-                else {
-                    newDeck.push(this.c[k]);
-                    k++;
-                }
-                i+=1;
-            }
             execBuffer.push({
                 deck: this,
-                time: 0.1,
+                time: 0.5,
                 apply(scene, t) {
                     let i = 0;
                     while(i < halfDeck) {
@@ -90,7 +85,7 @@ export function createDeck() {
             });
             execBuffer.push({
                 deck: this,
-                time: 0.1,
+                time: 0.25,
                 apply(scene, t) {
                     let i = halfDeck;
                     while(i < this.deck.c.length) {
@@ -113,7 +108,7 @@ export function createDeck() {
             });
             execBuffer.push({
                 deck: this,
-                time: 0.1,
+                time: 1,
                 apply(scene, t) {
                     let i = 0;
                     while(i < this.deck.c.length) {
@@ -124,7 +119,7 @@ export function createDeck() {
             });
             execBuffer.push({
                 deck: this,
-                time: 0.1,
+                time: 0.25,
                 apply(scene, t) {
                     let i = 0;
                     while(i < halfDeck) {
@@ -139,10 +134,24 @@ export function createDeck() {
             });
             execBuffer.push({
                 deck: this,
-                newDeck: newDeck,
-                time: 10,
+                newDeck: undefined,
+                time: 1,
                 icards: 0,
                 apply(scene, t) {
+                    if(this.newDeck === undefined) {
+                        this.newDeck = [];
+                        while(i < this.deck.c.length) {
+                            if(i % 2 === 0) {
+                                this.newDeck.push(this.deck.c[j]);
+                                j++;
+                            }
+                            else {
+                                this.newDeck.push(this.deck.c[k]);
+                                k++;
+                            }
+                            i+=1;
+                        }
+                    }
                     while(this.icards < this.deck.c.length*t) {
                         let cardT = (t - (this.icards/this.deck.c.length))*this.deck.c.length;
                         if (cardT > 1) {
@@ -155,27 +164,55 @@ export function createDeck() {
                         else {
                             cCard = Math.floor(this.icards/2) + halfDeck;
                         }
-                        console.log(cCard);
-                        // if (this.newDeck.length === 0 || this.newDeck[this.newDeck.length-1] !== this.deck.c[cCard]) {
-                        //     this.newDeck.push(this.deck.c[cCard]);
-                        // }
+                        // console.log(cCard);
                         this.deck.c[cCard].setR((1-cardT)*-0.05);
                         this.icards += 1;
                     }
                     if(this.icards > 0) {
                         this.icards -= 1;
                     }
-                    for(let i = 0; i < this.newDeck.length; i++) {
-                        let cardT = t * (this.newDeck.length-i);
+                    for(let i = this.icards; i < this.newDeck.length; i++) {
+                        let cardT = t * (1 + (this.newDeck.length - i) / this.newDeck.length);
                         if(cardT > 1) {
                             cardT = 1;
                         }
-                        this.newDeck[i].mesh.position.y = (cardT-1)*Math.floor(i/2)*stackSep + cardT*i*stackSep;
-                        // this.newDeck[i].mesh.position.y = (1-cardT)*Math.floor(i/2)*stackSep + cardT*i*stackSep;
+                        this.newDeck[i].mesh.position.y = (1-cardT)*Math.floor(i/2)*stackSep + cardT*i*stackSep;
+                    }
+                    if(t === 1) {
+                        this.deck.c = this.newDeck;
+                        // console.log(this.deck.c);
                     }
                 }
-
-            })
+            });
+            execBuffer.push({
+                deck: this,
+                time: 0.25,
+                apply(scene, t) {
+                    for(let i = 0; i < this.deck.c.length; i++) {
+                        if(i % 2 === 0) {
+                            this.deck.c[i].mesh.position.z = (1-t)*2;
+                        }
+                        else {
+                            this.deck.c[i].mesh.position.z = (1-t)*-2;
+                        }
+                    }
+                }
+            });
+            execBuffer.push({
+                deck: this,
+                time: 0,
+                apply(scene, t) {
+                    let i = 0;
+                    while(i < this.deck.c.length) {
+                        this.deck.c[i].mesh.rotation.y = 0;
+                        i+=1;
+                    }
+                }
+            });
+            execBuffer.push({
+                time: 0.5,
+                apply(scene, t) {}
+            });
         }
     }
     execBuffer.push({

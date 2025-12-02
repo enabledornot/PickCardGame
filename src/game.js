@@ -33,18 +33,27 @@ scene.add(sunlight);
 // card.bottom.position.y = 6;
 // scene.add(card.bottom);
 const cardDeck = GAMEOBJECTS.createDeck();
-cardDeck.shuffle();
+// GAMEOBJECTS.setCallBack(cardDeck.shuffle);
+// cardDeck.shuffle();
+// cardDeck.shuffle();
+// cardDeck.shuffle();
+// cardDeck.shuffle();
+// cardDeck.shuffle();
 function animate() {
     requestAnimationFrame(animate);
-    
+
     const delta = clock.getDelta();
 
     GAMEOBJECTS.gameLoop(scene, delta);
     controls.update();
     renderer.render(scene, camera);
-    // card.rotation.z += 0.02;
-  }
-  // GAMEOBJECTS.gameLoop(scene, 0);
-  // Start the animation loop
-  animate();
+}
+animate();
 
+function repeat() {
+    if(GAMEOBJECTS.execBuffer.length === 0) {
+        cardDeck.shuffle();
+    }
+    setTimeout(repeat, 1000);
+}
+repeat();

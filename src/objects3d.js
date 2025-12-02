@@ -195,6 +195,7 @@ export function createFoldableCard(cardType) {
     return {
         mesh: cardGroup,
         ss: subShapes,
+        type: cardType,
         setR(rval) {
             for(let i = 0; i < this.ss.length; i++) {
                 this.ss[i].rotation.x = rval;
